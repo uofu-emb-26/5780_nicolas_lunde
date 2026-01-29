@@ -30,12 +30,16 @@ int main(void)
     assert(GPIOC->PUPDR == 0x0); // Test for no pull-up or pull-down
 
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET); // Start PC8 high
+    assert(GPIOC->ODR == 0x100); // Test for PC8 = 1, PC9 = 0
 
     while (1)
     {
         HAL_Delay(200); // Delay 200ms
         // Toggle the output state of both PC8 and PC9
         HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9);
+        
+        // Test for PC8 = 1, PC9 = 0 or PC8 = 0, PC9 = 1
+        assert(GPIOC->ODR == 0x100 || GPIOC->ODR == 0x200);
     }
 }
 
