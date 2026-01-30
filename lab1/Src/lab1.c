@@ -31,16 +31,20 @@ int main(void)
     assert(GPIOC->OSPEEDR == 0x0 || GPIOC->OSPEEDR == 0xA000); // Test for low speed
     assert(GPIOC->PUPDR == 0x0); // Test for no pull-up or pull-down
 
-    My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET); // Start PC8 high
+    My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET); // Start PC6 high
     assert(GPIOC->ODR == 0x40); // Test for PC6 = 1, PC7 = 0
 
     while (1)
     {
-        HAL_Delay(200); // Delay 200ms
-        // Toggle the output state of both PC8 and PC9
-        My_HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6 | GPIO_PIN_7);
+        // HAL_Delay(200); // Delay 200ms
+
+        if (My_HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0))
+        { 
+            // Toggle the output state of both PC6 and PC7
+            My_HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6 | GPIO_PIN_7);
+        }
         
-        // Test for PC8 = 1, PC9 = 0 xor PC8 = 0, PC9 = 1
+        // Test for PC6 = 1, PC7 = 0 xor PC6 = 0, PC7 = 1
         assert(GPIOC->ODR == 0x40 ^ GPIOC->ODR == 0x80);
     }
 }
