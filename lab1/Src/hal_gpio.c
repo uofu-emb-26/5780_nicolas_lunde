@@ -5,8 +5,8 @@
 
 void My_HAL_GPIO_Init(GPIO_TypeDef  *GPIOx, GPIO_InitTypeDef *GPIO_Init)
 {
-    // Configure LED pins (PC6-PC9)
-    GPIOC->MODER = 0x50000; // General purpose output mode
+    // Configure Red and Blue LED pins (PC6-PC7)
+    GPIOC->MODER = 0x05000; // General purpose output mode
     GPIOC->OTYPER = 0x0;    // Push-pull output type
     GPIOC->OSPEEDR = 0x0;   // Low speed
     GPIOC->PUPDR = 0x0;     // No pull-up or pull-down

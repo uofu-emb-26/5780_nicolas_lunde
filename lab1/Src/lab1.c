@@ -27,21 +27,21 @@ int main(void)
                                 GPIO_SPEED_FREQ_LOW,
                                 GPIO_NOPULL};
     My_HAL_GPIO_Init(GPIOC, &initStr); // Initialize pins PC8 and PC9
-    assert(GPIOC->MODER == 0x50000); // Test for output mode
-    assert(GPIOC->OSPEEDR == 0x0 || GPIOC->OSPEEDR == 0xA0000); // Test for low speed
+    assert(GPIOC->MODER == 0x05000); // Test for output mode
+    assert(GPIOC->OSPEEDR == 0x0 || GPIOC->OSPEEDR == 0xA000); // Test for low speed
     assert(GPIOC->PUPDR == 0x0); // Test for no pull-up or pull-down
 
-    My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET); // Start PC8 high
-    assert(GPIOC->ODR == 0x100); // Test for PC8 = 1, PC9 = 0
+    My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET); // Start PC8 high
+    assert(GPIOC->ODR == 0x40); // Test for PC6 = 1, PC7 = 0
 
     while (1)
     {
         HAL_Delay(200); // Delay 200ms
         // Toggle the output state of both PC8 and PC9
-        My_HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9);
+        My_HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6 | GPIO_PIN_7);
         
         // Test for PC8 = 1, PC9 = 0 xor PC8 = 0, PC9 = 1
-        assert(GPIOC->ODR == 0x100 ^ GPIOC->ODR == 0x200);
+        assert(GPIOC->ODR == 0x40 ^ GPIOC->ODR == 0x80);
     }
 }
 
