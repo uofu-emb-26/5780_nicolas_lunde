@@ -12,15 +12,15 @@ void My_HAL_GPIO_Init(GPIO_TypeDef  *GPIOx, GPIO_InitTypeDef *GPIO_Init)
     GPIOC->PUPDR = 0x0;     // No pull-up or pull-down
 
     // Configure USER button pin PA0
-    //GPIOA->MODER = 0x0;     // Digital input mode
-    //GPIOA->OSPEEDR = 0x0;   // Low speed
-    //GPIOA->PUPDR = 0x2;     // Pull-down resistor
+    GPIOA->MODER |= 0x0;     // Digital input mode
+    GPIOA->OSPEEDR |= 0x0;   // Low speed
+    GPIOA->PUPDR |= 0x2;     // Pull-down resistor
 }
 
 
-/*
-
-*/
+/*GPIO_PinState My_HAL_GPIO_ReadPin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
+{
+}*/
 
 
 void My_HAL_GPIO_WritePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, GPIO_PinState PinState)
