@@ -1,5 +1,6 @@
 #include "main.h"
 #include <stm32f0xx_hal.h>
+#include "hal_gpio.h"
 #include "hal_rcc.h"
 #include "assert.h"
 
@@ -25,12 +26,12 @@ int main(void)
                                 GPIO_MODE_OUTPUT_PP,
                                 GPIO_SPEED_FREQ_LOW,
                                 GPIO_NOPULL};
-    HAL_GPIO_Init(GPIOC, &initStr); // Initialize pins PC8 and PC9
+    My_HAL_GPIO_Init(GPIOC, &initStr); // Initialize pins PC8 and PC9
     assert(GPIOC->MODER == 0x50000); // Test for output mode
     assert(GPIOC->OSPEEDR == 0x0 || GPIOC->OSPEEDR == 0xA0000); // Test for low speed
     assert(GPIOC->PUPDR == 0x0); // Test for no pull-up or pull-down
 
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET); // Start PC8 high
+    My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET); // Start PC8 high
     assert(GPIOC->ODR == 0x100); // Test for PC8 = 1, PC9 = 0
 
     while (1)
