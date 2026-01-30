@@ -1,5 +1,6 @@
 #include "main.h"
-#include "stm32f0xx_hal.h"
+#include <stm32f0xx_hal.h>
+#include "hal_rcc.h"
 #include "assert.h"
 
 void SystemClock_Config(void);
@@ -17,7 +18,7 @@ int main(void)
      * the GPIOC peripheral. You'll be redoing this code
      * with hardware register access. */
 
-    __HAL_RCC_GPIOC_CLK_ENABLE(); // Enable the GPIOC clock in the RCC
+    HAL_RCC_GPIOC_CLK_Enable(); // Enable the GPIOC clock in the RCC
 
     // Set up a configuration struct to pass to the initialization function
     GPIO_InitTypeDef initStr = {GPIO_PIN_8 | GPIO_PIN_9,

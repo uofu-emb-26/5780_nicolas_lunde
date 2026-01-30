@@ -2,6 +2,7 @@
 add_executable(lab1
     Src/lab1.c
     Src/hal_gpio.c
+    Src/hal_rcc.c
     Src/stm32f0xx_hal_msp.c
     Src/stm32f0xx_it.c
 )
