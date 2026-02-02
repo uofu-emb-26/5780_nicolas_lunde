@@ -20,7 +20,31 @@ void My_HAL_GPIO_Init(GPIO_TypeDef  *GPIOx, GPIO_InitTypeDef *GPIO_Init)
 
 GPIO_PinState My_HAL_GPIO_ReadPin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
 {
-    return GPIOx->IDR & GPIO_Pin;
+    uint32_t debouncer = 0;
+    while (1)
+    {
+        debouncer = (debouncer << 1);
+
+        if (GPIOx->IDR & GPIO_Pin)
+        {
+            debouncer |= 0x1;
+        } 
+        
+        if (debouncer == 0xFFFFFFFF)
+        {
+            return GPIO_PIN_SET;
+        }
+
+        if (debouncer == 0x00000000)
+        {
+            return GPIO_PIN_RESET;
+        }
+
+        if (debouncer == 0x7FFFFFFF)
+        {
+            return GPIO_PIN_SET;
+        }
+    }
 }
 
 
@@ -30,7 +54,7 @@ void My_HAL_GPIO_WritePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, GPIO_PinState 
 
     if (PinState)
     {
-        GPIOx->ODR |= (GPIO_Pin & 0xffffffff);    // Set pin
+        GPIOx->ODR |= (GPIO_Pin & 0xFFFFFFFF);    // Set pin
     }
 }
 

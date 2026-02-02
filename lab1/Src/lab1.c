@@ -34,15 +34,18 @@ int main(void)
     My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET); // Start PC6 high
     assert(GPIOC->ODR == 0x40); // Test for PC6 = 1, PC7 = 0
 
+    GPIO_PinState prev_state = GPIO_PIN_RESET;
     while (1)
     {
-        // HAL_Delay(200); // Delay 200ms
+        HAL_Delay(80); // Delay 200ms
 
-        if (My_HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0))
+        GPIO_PinState curr_state = My_HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
+        if (prev_state != GPIO_PIN_SET && curr_state == GPIO_PIN_SET)
         { 
             // Toggle the output state of both PC6 and PC7
             My_HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6 | GPIO_PIN_7);
         }
+        prev_state = curr_state;
         
         // Test for PC6 = 1, PC7 = 0 xor PC6 = 0, PC7 = 1
         assert(GPIOC->ODR == 0x40 ^ GPIOC->ODR == 0x80);
