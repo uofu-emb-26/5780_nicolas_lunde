@@ -5,16 +5,39 @@
 
 void My_HAL_GPIO_Init(GPIO_TypeDef  *GPIOx, GPIO_InitTypeDef *GPIO_Init)
 {
-    // Configure Red and Blue LED pins (PC6-PC7)
-    GPIOC->MODER = 0x05000; // General purpose output mode
-    GPIOC->OTYPER = 0x0;    // Push-pull output type
-    GPIOC->OSPEEDR = 0x0;   // Low speed
-    GPIOC->PUPDR = 0x0;     // No pull-up or pull-down
+    uint32_t pin = 0;
+    uint32_t pin2 = 0;
+    uint32_t temp;
 
-    // Configure USER button pin PA0
-    GPIOA->MODER |= 0x0;     // Digital input mode
-    GPIOA->OSPEEDR |= 0x0;   // Low speed
-    GPIOA->PUPDR |= 0x2;     // Pull-down resistor
+    while (pin < 16)
+    {
+        if ((0x1 << pin) & GPIO_Init->Pin)
+        {
+
+            temp = GPIOx->MODER;
+            temp &= ~(0x3 << pin2);
+            temp |= (GPIO_Init->Mode & GPIO_MODE) << pin2;
+            GPIOx->MODER = temp;
+
+            temp = GPIOx->OTYPER;
+            temp &= ~(0x1 << pin);
+            temp |= ((GPIO_Init->Mode & OUTPUT_TYPE) >> OUTPUT_TYPE_Pos) << pin;
+            GPIOx->OTYPER = temp;
+
+            temp = GPIOx->OSPEEDR;
+            temp &= ~(0x3 << pin2);
+            temp |= GPIO_Init->Speed << pin2;
+            GPIOx->OSPEEDR = temp;
+
+            temp = GPIOx->PUPDR;
+            temp &= ~(0x3 << pin2);
+            temp |= GPIO_Init->Pull << pin2;
+            GPIOx->PUPDR = temp;
+        }
+
+        pin++; 
+        pin2 += 2;
+    }
 }
 
 
