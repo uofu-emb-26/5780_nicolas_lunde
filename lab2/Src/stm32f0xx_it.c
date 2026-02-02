@@ -1,6 +1,7 @@
 #include "main.h"
 #include "stm32f0xx_hal.h"
 #include "stm32f0xx_it.h"
+#include "hal_gpio.h"
 
 /******************************************************************************/
 /*           Cortex-M0 Processor Interruption and Exception Handlers          */
@@ -44,7 +45,15 @@ void PendSV_Handler(void)
   */
 void SysTick_Handler(void)
 {
-  HAL_IncTick();
+    static uint32_t wait = 0;
+    if (wait == 200)
+    {
+        My_HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_7);
+        wait = 0;
+    }
+
+    HAL_IncTick();
+    wait++;
 }
 
 /******************************************************************************/
