@@ -2,9 +2,11 @@
 #include "stm32f0xx_hal.h"
 #include "hal_gpio.h"
 #include "hal_rcc.h"
+#include "core_cm0.h"
 #include "assert.h"
 
 void SystemClock_Config(void);
+void EXTI0_1_IRQHandler(void);
 
 /**
   * @brief  The application entry point.
@@ -94,6 +96,13 @@ void Error_Handler(void)
   while (1)
   {
   }
+}
+
+void EXTI0_1_IRQHandler(void)
+{
+    My_HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9);
+    //NVIC_ClearPendingIRQ(EXTI0_1_IRQn);
+    EXTI->PR |= 0x1;
 }
 
 #ifdef USE_FULL_ASSERT
