@@ -92,4 +92,6 @@ void ButtonInt_Init(void)
     EXTI->IMR |= 0x1;       // Enable interrupt for EXTI0
     EXTI->RTSR |= 0x1;      // Interrupt on rising edge trigger
     SYSCFG->EXTICR[0] |= 0x0; // EXTI0 will take interrupt input from PA0
+    NVIC_EnableIRQ(EXTI0_1_IRQn);       // Enable EXTI0 line in NVIC
+    NVIC_SetPriority(EXTI0_1_IRQn, 1);  // Set high priority
 }
