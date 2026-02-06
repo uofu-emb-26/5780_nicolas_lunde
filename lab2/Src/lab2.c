@@ -35,9 +35,11 @@ int main(void)
 
     assert((EXTI->IMR & 0x1) == 0x0);   // Test EXTI0 off
     assert((EXTI->RTSR & 0x1) == 0x0);  // Test no rising edge trigger
+    assert((SYSCFG->EXTICR[0] & 0x1) == 0x0);
     ButtonInt_Init();
     assert((EXTI->IMR & 0x1) == 0x1);   // Test EXTI0 on
     assert((EXTI->RTSR & 0x1) == 0x1);  // Test rising edge trigger is set
+    assert((SYSCFG->EXTICR[0] & 0x1) == 0x0); // Test PA0 is using EXTI0F
 
     while (1)
     {
