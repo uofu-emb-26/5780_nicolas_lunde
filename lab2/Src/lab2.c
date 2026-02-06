@@ -2,6 +2,7 @@
 #include "stm32f0xx_hal.h"
 #include "hal_gpio.h"
 #include "hal_rcc.h"
+#include "assert.h"
 
 void SystemClock_Config(void);
 
@@ -26,6 +27,18 @@ int main(void)
     My_HAL_GPIO_Init(GPIOC, &initStr); // Initialize pins PC6 and PC9
     My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
 
+    GPIO_InitTypeDef initBtn ={ GPIO_PIN_0,
+                                GPIO_MODE_INPUT,
+                                GPIO_SPEED_FREQ_LOW,
+                                GPIO_PULLDOWN };
+    My_HAL_GPIO_Init(GPIOA, &initBtn);
+
+    assert((EXTI->IMR & 0x1) == 0x0);   // Test EXTI0 off
+    assert((EXTI->RTSR & 0x1) == 0x0);  // Test no rising edge trigger
+    ButtonInt_Init();
+    assert((EXTI->IMR & 0x1) == 0x1);   // Test EXTI0 on
+    assert((EXTI->RTSR & 0x1) == 0x1);  // Test rising edge trigger is set
+
     while (1)
     {
         HAL_Delay(500);
@@ -33,7 +46,6 @@ int main(void)
     }
     return -1;
 }
-
 /**
   * @brief System Clock Configuration
   * @retval None

@@ -86,3 +86,10 @@ void My_HAL_GPIO_TogglePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
 {
     GPIOx->ODR ^= GPIO_Pin;
 }
+
+void ButtonInt_Init(void)
+{
+    EXTI->IMR |= 0x1;       // Enable interrupt for EXTI0
+    EXTI->RTSR |= 0x1;      // Interrupt on rising edge trigger
+    SYSCFG->EXTICR[0] |= 0x0; // EXTI0 will take interrupt input from PA0
+}

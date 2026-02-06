@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 void Error_Handler(void);
+void ButtonInt_Init(void);
 
 #ifdef __cplusplus
 }
