@@ -43,10 +43,11 @@ int main(void)
     assert((EXTI->RTSR & 0x1) == 0x1);  // Test rising edge trigger is set
     assert((SYSCFG->EXTICR[0] & 0x1) == 0x0); // Test PA0 is using EXTI0F
 
+    NVIC_SetPriority(SysTick_IRQn, 2);  // Set high priority
     while (1)
     {
         HAL_Delay(500);
-        My_HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);       
+        My_HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6); // Blink Red LED 
     }
     return -1;
 }
@@ -100,8 +101,16 @@ void Error_Handler(void)
 
 void EXTI0_1_IRQHandler(void)
 {
+    uint32_t wait = 0;
+    while (wait < 350000)
+    {
+        HAL_IncTick();
+        wait++;
+    }
+
+    wait = 0;
     My_HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9);
-    //NVIC_ClearPendingIRQ(EXTI0_1_IRQn);
+    NVIC_ClearPendingIRQ(EXTI0_1_IRQn);
     EXTI->PR |= 0x1;
 }
 
