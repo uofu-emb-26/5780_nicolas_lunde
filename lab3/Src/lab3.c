@@ -1,5 +1,8 @@
 #include "main.h"
 #include "stm32f0xx_hal.h"
+#include "stm32f0xx_hal_gpio.h"
+#include "stm32f072xb.h"
+#include "timer.h"
 
 void SystemClock_Config(void);
 
@@ -9,16 +12,25 @@ void SystemClock_Config(void);
   */
 int main(void)
 {
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
-  /* Configure the system clock */
-  SystemClock_Config();
+    /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+    HAL_Init();
+    /* Configure the system clock */
+    SystemClock_Config();
 
-  while (1)
-  {
- 
-  }
-  return -1;
+    // Enable the GPIOC clock in the RCC
+    RCC->AHBENR |= RCC_AHBENR_GPIOCEN; 
+
+    GPIO_InitTypeDef initStr = {GPIO_PIN_8 | GPIO_PIN_9,
+                                GPIO_MODE_OUTPUT_PP,
+                                GPIO_SPEED_FREQ_LOW,
+                                GPIO_NOPULL};
+    HAL_GPIO_Init(GPIOC, &initStr);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
+    Timer4Hz_Init();
+    while (1)
+    {
+    }
+    return -1;
 }
 
 /**
