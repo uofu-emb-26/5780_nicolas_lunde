@@ -25,18 +25,12 @@ void Timer4Hz_Init(void)
     NVIC_SetPriority(TIM2_IRQn, 3);  // Set high priority
 }
 
-void TimerPWM_Init(void)
+void TimerPWM_Init(uint16_t arr, uint16_t psc, uint16_t ccr)
 {
     // Enable timer 3 clock 
-    RCC->APB1ENR = RCC_APB1ENR_TIM3EN; 
-
-    /**
-     * 8 MHz input clock / (7 + 1) = 1 KHz
-     * 1 / 8 KHz = 125 us. 125 us * 10 = 1250 us
-     * 1 / 1250 us = 800 Hz
-     */
-    TIM3->ARR = 10000; // Count up to 10
-    TIM3->PSC = 0;
+    RCC->APB1ENR = RCC_APB1ENR_TIM3EN;  
+    TIM3->ARR = arr;
+    TIM3->PSC = psc;
 
     uint16_t temp = TIM3->CCMR1;
     temp &= ~(TIM_CCMR1_OC2M | TIM_CCMR1_CC2S | TIM_CCMR1_OC1M | TIM_CCMR1_CC1S);  
@@ -48,13 +42,8 @@ void TimerPWM_Init(void)
 
     TIM3->CCER |= TIM_CCER_CC1E | TIM_CCER_CC2E; // Output enable
 
-    /**
-     * ARR = 10000
-     * 20% of 10000 = 2000
-     * Generates output when timer counter reaches 250
-     */
-    TIM3->CCR1 = 2000;
-    TIM3->CCR2 = 2000;
+    TIM3->CCR1 = ccr;
+    TIM3->CCR2 = ccr;
 
     TIM3->CR1 |= TIM_CR1_CEN; // Enable timer 3. Default upcounter.
 

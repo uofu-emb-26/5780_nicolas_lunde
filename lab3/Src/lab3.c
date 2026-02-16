@@ -35,7 +35,17 @@ int main(void)
     // In Alternate Function mode, PC6 and PC7 are set to TIM3 by default
     
     //Timer4Hz_Init();
-    TimerPWM_Init();
+    
+    /**
+     * 8 MHz input clock / (0 + 1) = 8 MHz
+     * 1 / 8 MHz = 125 ns. 125 ns * 10000 = 1250 us
+     * 1 / 1250 us = 800 Hz
+     * 
+     * ARR = 10000
+     * 20% of 10000 = 2000
+     * Generates output when timer counter reaches 250
+     */
+    TimerPWM_Init(10000, 0, 2000);
     uint16_t x = 0;
     int up = 1;
     while (1)
