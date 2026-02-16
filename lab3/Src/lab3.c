@@ -26,9 +26,32 @@ int main(void)
                                 GPIO_NOPULL};
     HAL_GPIO_Init(GPIOC, &initStr);
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
-    Timer4Hz_Init();
+
+    GPIO_InitTypeDef initStr1 = { GPIO_PIN_6 | GPIO_PIN_7,
+                GPIO_MODE_AF_PP,
+                GPIO_SPEED_FREQ_LOW,
+                GPIO_NOPULL};
+    HAL_GPIO_Init(GPIOC, &initStr1);
+    // In Alternate Function mode, PC6 and PC7 are set to TIM3 by default
+    
+    //Timer4Hz_Init();
+    TimerPWM_Init();
+    uint16_t x = 0;
+    int up = 1;
     while (1)
     {
+        HAL_Delay(1);
+        TIM3->CCR1 = x; // PC6
+        TIM3->CCR2 = x; // PC7
+        if (x == 10000)
+            up = 0;
+        else if (x == 0)
+            up = 1;
+
+        if (up)
+            x += 10;
+        else
+            x -= 10;
     }
     return -1;
 }
