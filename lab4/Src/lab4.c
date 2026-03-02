@@ -4,6 +4,7 @@
 
 void SystemClock_Config(void);
 void TransmitChar(char c);
+void TransmitString(char* msg);
 
 /**
   * @brief  The application entry point.
@@ -39,25 +40,49 @@ int main(void)
 
     USART3->CR1 |= USART_CR1_UE;
 
-    GPIO_InitTypeDef initStr1 = {GPIO_PIN_6,
+    GPIO_InitTypeDef initStr1 = {GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9,
                                 GPIO_MODE_OUTPUT_PP,
                                 GPIO_SPEED_FREQ_LOW,
                                 GPIO_NOPULL};
     HAL_GPIO_Init(GPIOC, &initStr1);
 
-    char* msg = "I'm sorry Dave, I'm afraid I can't do that\n";
+    char* error_msg = "LED color not found. Use either r, g, b, o\n";
     while (1)
     {
-        HAL_Delay(1000);
-
-        for (char* c = msg; *c != '\0'; c++)
+        //HAL_Delay(1000);
+        while(!(USART3->ISR & USART_ISR_RXNE))
         {
-            TransmitChar(*c);
+        }
+        char c = USART3->RDR;
+        switch (c)
+        {
+        case 'r':
             HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
-            assert(USART3->TDR == *c);
+            break;
+        case 'g':
+            HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_9);
+            break;
+        case 'b':
+            HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_7);
+            break;
+        case 'o':
+            HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
+            break;
+        default:
+            TransmitString(error_msg);
         }
     }
     return -1;
+}
+
+void TransmitString(char* msg)
+{
+    for (char* c = msg; *c != '\0'; c++)
+    {
+        TransmitChar(*c);
+        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+        assert(USART3->TDR == *c);
+    }
 }
 
 void TransmitChar(char c)
