@@ -5,6 +5,10 @@
 void SystemClock_Config(void);
 void TransmitChar(char c);
 void TransmitString(char* msg);
+void USART3_4_IRQHandler(void);
+
+char g_rx_data;
+int g_rx_flag;
 
 /**
   * @brief  The application entry point.
@@ -37,8 +41,12 @@ int main(void)
     uint32_t sys_clk_freq = HAL_RCC_GetHCLKFreq();
     USART3->BRR = sys_clk_freq / 115200;
     USART3->CR1 = USART_CR1_TE | USART_CR1_RE; // Enable transmitter and receiver
+    USART3->CR1 |= USART_CR1_RXNEIE; // Enable reciever not empty interrupt
 
-    USART3->CR1 |= USART_CR1_UE;
+    USART3->CR1 |= USART_CR1_UE; // Enable USART3
+
+    NVIC_EnableIRQ(USART3_4_IRQn);       // Enable USART3 in NVIC
+    NVIC_SetPriority(USART3_4_IRQn, 1);  // Set high priority
 
     GPIO_InitTypeDef initStr1 = {GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9,
                                 GPIO_MODE_OUTPUT_PP,
@@ -46,31 +54,63 @@ int main(void)
                                 GPIO_NOPULL};
     HAL_GPIO_Init(GPIOC, &initStr1);
 
-    char* error_msg = "LED color not found. Use either r, g, b, o\n";
+    char* error_color_msg = "\nLED color not found. Use either r, g, b, o";
+    char* error_action_msg = "\nAction not found. Use either 0, 1, 2";
+    uint16_t pin_num; 
+    int color_picked = 0; 
+    TransmitString("CMD$ ");
     while (1)
     {
-        //HAL_Delay(1000);
-        while(!(USART3->ISR & USART_ISR_RXNE))
+        while (!g_rx_flag)
         {
         }
-        char c = USART3->RDR;
-        switch (c)
-        {
-        case 'r':
-            HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
-            break;
-        case 'g':
-            HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_9);
-            break;
-        case 'b':
-            HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_7);
-            break;
-        case 'o':
-            HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
-            break;
-        default:
-            TransmitString(error_msg);
+
+        TransmitChar(g_rx_data);
+        if (!color_picked)
+        { 
+            color_picked = 1;
+            switch (g_rx_data)
+            {
+            case 'r':
+                pin_num = GPIO_PIN_6;
+                break;
+            case 'g':
+                pin_num = GPIO_PIN_9;
+                break;
+            case 'b':
+                pin_num = GPIO_PIN_7;
+                break;
+            case 'o':
+                pin_num = GPIO_PIN_8;
+                break;
+            default:
+                TransmitString(error_color_msg);
+                TransmitString("\nCMD$ ");
+                color_picked = 0;
+                break;
+            }
         }
+        else
+        {
+            switch (g_rx_data)
+            {
+            case '0':
+                HAL_GPIO_WritePin(GPIOC, pin_num, GPIO_PIN_RESET);
+                break;
+            case '1':
+                HAL_GPIO_WritePin(GPIOC, pin_num, GPIO_PIN_SET);
+                break;
+            case '2':
+                HAL_GPIO_TogglePin(GPIOC, pin_num);
+                break;
+            default:
+                TransmitString(error_action_msg);
+                break;
+            }
+            color_picked = 0;
+            TransmitString("\nCMD$ ");
+        }
+        g_rx_flag = 0;
     }
     return -1;
 }
@@ -80,7 +120,6 @@ void TransmitString(char* msg)
     for (char* c = msg; *c != '\0'; c++)
     {
         TransmitChar(*c);
-        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
         assert(USART3->TDR == *c);
     }
 }
@@ -91,6 +130,12 @@ void TransmitChar(char c)
     {
     }
     USART3->TDR = c;
+}
+
+void USART3_4_IRQHandler(void)
+{
+    g_rx_data = USART3->RDR;
+    g_rx_flag = 1;
 }
 
 /**
