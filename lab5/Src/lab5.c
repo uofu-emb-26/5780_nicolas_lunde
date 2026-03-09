@@ -73,7 +73,7 @@ int main(void)
 
     // Writing operation
     I2C2->CR1 |= I2C_CR1_PE_Pos; // Enable I2C2
-    I2C2->CR2 |= (0x6B << I2C_CR2_SADD_Pos); // Slave address for L3GD20 gyro sensor
+    I2C2->CR2 |= (0x6B << I2C_CR2_SADD_Pos); // Slave address for I3G4250D gyro sensor
     I2C2->CR2 |= (0x0 << I2C_CR2_RD_WRN_Pos); // Write transfer
     I2C2->CR2 |= (0x1 << I2C_CR2_START_Pos); // Start transfer generation
 
