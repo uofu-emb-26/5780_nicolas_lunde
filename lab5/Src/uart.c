@@ -4,6 +4,7 @@
 #include "stm32f072xb.h"
 
 USART_TypeDef* PortToStruct(uint8_t port);
+char BitsToHex(uint8_t bits);
 void USART1_IRQHandler(void);
 void USART2_IRQHandler(void);
 void USART3_4_IRQHandler(void);
@@ -112,16 +113,21 @@ void UART_TransmitChar(uint8_t port, char c)
     usart->TDR = c;
 }
 
-void UART_TransmitInt(uint8_t port, int num, int digits)
+void UART_TransmitHex(uint8_t port, size_t num, size_t size)
 {
     USART_TypeDef* usart = PortToStruct(port);
-    int digit;
-    int digit_place = digits;
-    while (digit_place >= 0)
+    UART_TransmitString(port, "0x");
+
+    uint8_t *ptr = (uint8_t *) &num + size - 1;
+    uint8_t upper, lower;
+
+    for (int i = 0; i < size; i++)
     {
-        digit = (num / (10 * digit_place)) - (10 * digit_place);
-        UART_TransmitChar(port, digit + '0');
-        digit_place--;
+        upper = (*ptr & 0xF0) >> 4;
+        lower = *ptr & 0x0F;
+        UART_TransmitChar(port, BitsToHex(upper));
+        UART_TransmitChar(port, BitsToHex(lower));
+        ptr--; // Go backwards because little endian
     }
     UART_TransmitChar(port, '\0');
 }
@@ -166,4 +172,15 @@ USART_TypeDef* PortToStruct(uint8_t port)
     case 4:
         return USART4;
     }
+}
+
+char BitsToHex(uint8_t bits)
+{
+    if (bits > 15) bits = 16;
+    static char lookup[17] = 
+    {
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', 
+        '9', 'A', 'B', 'C', 'D', 'E', 'F', '?'
+    };
+    return lookup[bits];
 }

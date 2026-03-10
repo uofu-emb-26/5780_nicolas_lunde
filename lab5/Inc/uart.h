@@ -2,6 +2,7 @@
 #define __UART_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 extern char uart1_rx_data;
 extern int uart1_rx_flag;
@@ -20,6 +21,6 @@ void UART_SetBaudRate(uint8_t port, uint32_t baud);
 void UART_Enable(uint8_t port, uint8_t interrupt_priority);
 void UART_TransmitString(uint8_t port, char* msg);
 void UART_TransmitChar(uint8_t port, char c);
-void UART_TransmitInt(uint8_t port, int num, int digits);
+void UART_TransmitHex(uint8_t port, size_t num, size_t size);
 
 #endif
