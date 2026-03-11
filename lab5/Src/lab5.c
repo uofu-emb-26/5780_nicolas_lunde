@@ -1,6 +1,7 @@
 #include "main.h"
 #include "stm32f0xx_hal.h"
 #include "uart.h"
+#include "i3g4250d_driver.h"
 
 void SystemClock_Config(void);
 
@@ -29,113 +30,47 @@ int main(void)
 
     // Enable RCC for GPIOB and GPIOC
     RCC->AHBENR |= RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN; 
-    RCC->APB1ENR |= RCC_APB1ENR_I2C2EN; //Enable I2C2 clock
-
-    GPIO_InitTypeDef init_sda_scl = {GPIO_PIN_11 | GPIO_PIN_13,
-                                GPIO_MODE_AF_OD,
-                                GPIO_SPEED_FREQ_LOW,
-                                GPIO_NOPULL};
-
-    HAL_GPIO_Init(GPIOB, &init_sda_scl);
-    GPIOB->AFR[1] |= (0x1 << GPIO_AFRH_AFSEL11_Pos); // Set PB11 AF to I2C2_SDA
-    GPIOB->AFR[1] |= (0x5 << GPIO_AFRH_AFSEL13_Pos); // Set PB13 AF to I2C2_SCL
-
-    GPIO_InitTypeDef init_pb14 = {GPIO_PIN_14, 
-                                GPIO_MODE_OUTPUT_PP,
-                                GPIO_SPEED_FREQ_LOW,
-                                GPIO_NOPULL};
-    HAL_GPIO_Init(GPIOB, &init_pb14);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
     
-    GPIO_InitTypeDef init_pb15 = {GPIO_PIN_15, 
-                                GPIO_MODE_INPUT,
-                                GPIO_SPEED_FREQ_LOW,
-                                GPIO_NOPULL};
-    HAL_GPIO_Init(GPIOB, &init_pb15);
-
-    GPIO_InitTypeDef init_pc0 = {GPIO_PIN_0, 
-                                GPIO_MODE_OUTPUT_PP,
-                                GPIO_SPEED_FREQ_LOW,
-                                GPIO_NOPULL};
-    HAL_GPIO_Init(GPIOC, &init_pc0);
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_SET);
- 
-    /**
-     * Set to 100 kHz
-     * fI2CCLK = 8 MHz
-     * tI2CCLK = 1 / fI2CCLK = 125 ns
-     * tPRESC = (PRESC+1) * tI2CCLK = (1+1) * 125 ns = 250 ns
-     * tSCLL = (SCLL+1) * tPRESC = 20 * 250 ns = 50 us
-     * tSCLH = (SCLH+1) * tPRESC = 16 * 250 ns = 4 us
-     * tSDADEL = SDADEL * tPRESC = 2 * 250 ns = 500 ns
-     * tSCLDEL = SCLDEL * tPRESC = 5 * 250 ns = 1250 ns
-    */ 
-    I2C2->TIMINGR |= (19 << I2C_TIMINGR_SCLL_Pos); // SCL low period
-    I2C2->TIMINGR |= (15 << I2C_TIMINGR_SCLH_Pos); // SCL high period
-    I2C2->TIMINGR |= (2 << I2C_TIMINGR_SDADEL_Pos); // Data hold time 
-    I2C2->TIMINGR |= (4 << I2C_TIMINGR_SCLDEL_Pos); // Data setup time 
-    I2C2->TIMINGR |= (1 << I2C_TIMINGR_PRESC_Pos); // Timing prescaler
-
-    I2C2->CR1 |= I2C_CR1_TXIE; // Enable TXIS interrupt
-    I2C2->CR1 |= I2C_CR1_PE; // Enable I2C2
-
-
-    // Writing operation
-    // The LSB of SADD toggles 7-bit addressing (0) or 10-bit (1)
-    // Put the slave address in SADD[7:1]
-    I2C2->CR2 |= (0x69 << (I2C_CR2_SADD_Pos + 1)); // Slave address for I3G4250D gyro sensor
-    I2C2->CR2 |= (1 << I2C_CR2_NBYTES_Pos); // Transfer 1 byte
-    I2C2->CR2 &= ~I2C_CR2_RD_WRN; // Write transfer
-    I2C2->CR2 |= I2C_CR2_START; // Start transfer generation
- 
-    // Wait until Transmit Register is empty or Slave Not-Acknowledged
-    while (!(I2C2->ISR & (I2C_ISR_TXIS | I2C_ISR_NACKF)))
-    {
-    }
- 
-    if (I2C2->ISR & I2C_ISR_NACKF)
-    {
-        return 0;
-    }
-
-    I2C2->TXDR = 0x0F; // Address of WHO_AM_I register in I3G4250D 
-    // Wait until transfer is complete
-    while (!(I2C2->ISR & I2C_ISR_TC)){}
-
-    // Reading operation
-    I2C2->CR2 |= (0x69 << (I2C_CR2_SADD_Pos + 1)); // Slave address for I3G4250D gyro sensor
-    I2C2->CR2 |= (1 << I2C_CR2_NBYTES_Pos); // Transfer 1 byte
-    I2C2->CR2 |= I2C_CR2_RD_WRN; // Read transfer
-    I2C2->CR2 |= I2C_CR2_START; // Start transfer generation
-
-    // Wait until Receive Register is not empty or Slave Not-Acknowledged
-    while (!(I2C2->ISR & (I2C_ISR_RXNE | I2C_ISR_NACKF))){}
-    
-    if (I2C2->ISR & I2C_ISR_NACKF)
-    {
-        return 0;
-    }
-
-    // Wait until transfer is complete
-    while (!(I2C2->ISR & I2C_ISR_TC)){}
-    
-    uint8_t data = I2C2->RXDR;
-    I2C2->CR2 |= I2C_CR2_STOP;
+    I3G4_Init();
+    uint8_t data = I3G4_ReadRegister(I3G4_WHO_AM_I);
     UART_TransmitString(uart_port, "WHO_AM_I: ");
     UART_TransmitHex(uart_port, data, 1); 
     UART_TransmitString(uart_port, "\r\n");
 
+    // Enable X and Y axes and enable sleep mode
+    I3G4_WriteRegister(I3G4_CTRL_REG1, 0x0B);
+
     // Flashing LED
-    GPIO_InitTypeDef initStr = {GPIO_PIN_6, 
+    GPIO_InitTypeDef initStr = {GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9, 
                                 GPIO_MODE_OUTPUT_PP,
                                 GPIO_SPEED_FREQ_LOW,
                                 GPIO_NOPULL};
     HAL_GPIO_Init(GPIOC, &initStr); 
 
+    int16_t x = 0 ;
+    int16_t y = 0;
+
     while (1)
     {
-        HAL_Delay(1000);
-        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+        HAL_Delay(100);
+        
+        x = I3G4_ReadRegister(I3G4_OUT_X_H);
+        x <<= 8;
+        x |= I3G4_ReadRegister(I3G4_OUT_X_L);
+
+        y = I3G4_ReadRegister(I3G4_OUT_Y_H);
+        y <<= 8;
+        y |= I3G4_ReadRegister(I3G4_OUT_Y_L);
+
+        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
+
+        if (x > 0) HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
+        if (x < 0) HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
+        if (y > 0) HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);
+        if (y < 0) HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
     }
     return -1;
 }
