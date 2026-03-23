@@ -1,6 +1,7 @@
 # Add C source files here.
 add_executable(lab6
     Src/adc.c
+    Src/dac.c
     Src/lab6.c
     Src/led.c
     Src/stm32f0xx_hal_msp.c

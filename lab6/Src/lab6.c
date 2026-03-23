@@ -4,6 +4,7 @@
 #include "led.h"
 #include "adc.h"
 #include "uart.h"
+#include "dac.h"
 
 void SystemClock_Config(void);
 
@@ -34,12 +35,29 @@ int main(void)
     ADC_InitPin(channel);
     ADC_Init(channel);
 
+    // Sine Wave: 8-bit, 32 samples/cycle
+    const uint8_t sine_table[32] = {127,151,175,197,216,232,244,251,254,251,244,
+    232,216,197,175,151,127,102,78,56,37,21,9,2,0,2,9,21,37,56,78,102};
+    // Triangle Wave: 8-bit, 32 samples/cycle
+    const uint8_t triangle_table[32] = {0,15,31,47,63,79,95,111,127,142,158,174,
+    190,206,222,238,254,238,222,206,190,174,158,142,127,111,95,79,63,47,31,15};
+    // Sawtooth Wave: 8-bit, 32 samples/cycle
+    const uint8_t sawtooth_table[32] = {0,7,15,23,31,39,47,55,63,71,79,87,95,103,
+    111,119,127,134,142,150,158,166,174,182,190,198,206,214,222,230,238,246};
+    // Square Wave: 8-bit, 32 samples/cycle
+    const uint8_t square_table[32] = {254,254,254,254,254,254,254,254,254,254,
+    254,254,254,254,254,254,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
+    DAC_InitPin(1);
+    DAC_Init(1);
+
+    // ADC Loop
     uint8_t data = 0;
     uint8_t orange_th = 64;
     uint8_t red_th = 128;
-    uint8_t green_th = 192;
+    uint8_t green_th = 220;
     uint8_t blue_th = 255;
-
+    int i = 0;
     while (1)
     {
         HAL_GPIO_WritePin(GPIOC, LED_ORANGE, GPIO_PIN_RESET);
@@ -54,9 +72,6 @@ int main(void)
         while (!(ADC1->ISR & ADC_ISR_EOC)) {} // Wait until conversion ends
         data = ADC1->DR; // Right aligned 8 bits
 
-        UART_TransmitHex(3, data, 4);
-        UART_TransmitString(3, "\r\n");
-
         if (data < orange_th)
             HAL_GPIO_WritePin(GPIOC, LED_ORANGE, GPIO_PIN_SET);
         else if (data < red_th)
@@ -65,7 +80,15 @@ int main(void)
             HAL_GPIO_WritePin(GPIOC, LED_GREEN, GPIO_PIN_SET);
         else if (data <= blue_th) 
             HAL_GPIO_WritePin(GPIOC, LED_BLUE, GPIO_PIN_SET);
+   
+        DAC1->DHR8R1 = sine_table[i];
+        i++;
+        if (i == 32)
+            i = 0;
+        HAL_Delay(1); // 1 ms / 32 samples = 31 Hz
+
     }
+
     return -1;
 }
 
