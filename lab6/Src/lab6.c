@@ -1,5 +1,9 @@
 #include "main.h"
 #include "stm32f0xx_hal.h"
+#include "stm32f0xx_hal_gpio.h"
+#include "led.h"
+#include "adc.h"
+#include "uart.h"
 
 void SystemClock_Config(void);
 
@@ -9,16 +13,60 @@ void SystemClock_Config(void);
   */
 int main(void)
 {
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
-  /* Configure the system clock */
-  SystemClock_Config();
+    /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+    HAL_Init();
+    /* Configure the system clock */
+    SystemClock_Config();
 
-  while (1)
-  {
- 
-  }
-  return -1;
+    uint8_t uart = 3;
+    uint8_t uart_gpio = 2;
+    uint8_t uart_tx = 4; // PC4
+    uint8_t uart_rx = 5; // PC5
+    uint32_t baud = 115200;
+    uint8_t interrupt_priority = 1;
+    UART_Init(uart, uart_gpio, uart_tx, uart_rx);
+    UART_SetBaudRate(uart, baud);
+    UART_Enable(uart, interrupt_priority);
+    UART_TransmitString(uart, "UART Works!\r\n");
+
+    InitLEDs(LED_RED | LED_GREEN | LED_BLUE | LED_ORANGE);
+    uint8_t channel = 0;
+    ADC_InitPin(channel);
+    ADC_Init(channel);
+
+    uint8_t data = 0;
+    uint8_t orange_th = 64;
+    uint8_t red_th = 128;
+    uint8_t green_th = 192;
+    uint8_t blue_th = 255;
+
+    while (1)
+    {
+        HAL_GPIO_WritePin(GPIOC, LED_ORANGE, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOC, LED_RED, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOC, LED_GREEN, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOC, LED_BLUE, GPIO_PIN_RESET);
+
+        if (ADC1->ISR & ADC_ISR_OVR) {
+            ADC1->ISR |= ADC_ISR_OVR; 
+        }
+
+        while (!(ADC1->ISR & ADC_ISR_EOC)) {} // Wait until conversion ends
+        data = ADC1->DR; // Right aligned 8 bits
+
+        UART_TransmitHex(3, data, 1);
+        UART_TransmitString(3, "\r\n");
+
+        if (data >= orange_th)
+            HAL_GPIO_WritePin(GPIOC, LED_ORANGE, GPIO_PIN_SET);
+        else if (data >= red_th)
+            HAL_GPIO_WritePin(GPIOC, LED_RED, GPIO_PIN_SET);
+        else if (data >= green_th)
+            HAL_GPIO_WritePin(GPIOC, LED_GREEN, GPIO_PIN_SET);
+        else if (data >= blue_th) 
+            HAL_GPIO_WritePin(GPIOC, LED_BLUE, GPIO_PIN_SET);
+    }
+    return -1;
 }
 
 /**
