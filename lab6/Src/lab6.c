@@ -54,16 +54,16 @@ int main(void)
         while (!(ADC1->ISR & ADC_ISR_EOC)) {} // Wait until conversion ends
         data = ADC1->DR; // Right aligned 8 bits
 
-        UART_TransmitHex(3, data, 1);
+        UART_TransmitHex(3, data, 4);
         UART_TransmitString(3, "\r\n");
 
-        if (data >= orange_th)
+        if (data < orange_th)
             HAL_GPIO_WritePin(GPIOC, LED_ORANGE, GPIO_PIN_SET);
-        else if (data >= red_th)
+        else if (data < red_th)
             HAL_GPIO_WritePin(GPIOC, LED_RED, GPIO_PIN_SET);
-        else if (data >= green_th)
+        else if (data < green_th)
             HAL_GPIO_WritePin(GPIOC, LED_GREEN, GPIO_PIN_SET);
-        else if (data >= blue_th) 
+        else if (data <= blue_th) 
             HAL_GPIO_WritePin(GPIOC, LED_BLUE, GPIO_PIN_SET);
     }
     return -1;
