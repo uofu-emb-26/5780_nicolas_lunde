@@ -9,6 +9,8 @@ void USART1_IRQHandler(void);
 void USART2_IRQHandler(void);
 void USART3_4_IRQHandler(void);
 
+void (*uart_rx_cb)(uint8_t, char) = NULL;
+
 char uart1_rx_data;
 int uart1_rx_flag;
 
@@ -158,12 +160,16 @@ void USART1_IRQHandler(void)
 {
     uart1_rx_data = USART1->RDR;
     uart1_rx_flag = 1;
+    uart_rx_cb(1, uart3_rx_data);
+    uart1_rx_flag = 0;
 }
 
 void USART2_IRQHandler(void)
 {
     uart2_rx_data = USART3->RDR;
     uart2_rx_flag = 1;
+    uart_rx_cb(2, uart3_rx_data);
+    uart2_rx_flag = 0;
 }
 
 void USART3_4_IRQHandler(void)
@@ -172,12 +178,16 @@ void USART3_4_IRQHandler(void)
     {
         uart3_rx_data = USART3->RDR;
         uart3_rx_flag = 1;
+        uart_rx_cb(3, uart3_rx_data);
+        uart3_rx_flag = 0;
     }
 
     if (USART4->ISR & USART_ISR_RXNE)
     {
         uart4_rx_data = USART4->RDR;
         uart4_rx_flag = 1;
+        uart_rx_cb(4, uart3_rx_data);
+        uart4_rx_flag = 0;
     }
 }
 

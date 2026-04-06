@@ -227,8 +227,6 @@ void PI_update(void) {
     else if (error_integral < 0)
         error_integral = 0;
 
-    UART_TransmitInt(3, error, 4);
-    UART_TransmitString(3, "\r\n");
     /// TODO: Calculate proportional portion, add integral and write to "output" variable
 
     int16_t output = (Kp * error) + error_integral; // Change this!
@@ -259,9 +257,6 @@ void PI_update(void) {
         output = 0; 
 
     pwm_setDutyCycle(output);
-    UART_TransmitString(3, "Output: ");
-    UART_TransmitInt(3, output, 4);
-    UART_TransmitString(3, "\r\n");
     duty_cycle = output;            // For debug viewing
 
     // Read the ADC value for current monitoring, actual conversion into meaningful units

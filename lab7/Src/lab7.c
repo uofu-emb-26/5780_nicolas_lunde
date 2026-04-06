@@ -6,6 +6,8 @@
 #include "SEGGER_RTT.h"
 #include "uart.h"
 
+#define UART_PORT 3
+
 /* ---------------------------------------------------------------------------------------------------------
  *  Global Variable Declarations
  *  -------------------------------------------------------------------------------------------------------------
@@ -72,6 +74,28 @@ void Lab7_Systick_Callback(void) {
     }
 }
 
+void uart_receive(uint8_t port, char c)
+{
+    static char str[8];
+    static int n;
+
+    if (port != UART_PORT)
+        return;
+
+    str[n] = c;
+    n++;
+
+    if (c == '\r' || n == 8) {
+        target_rpm = atoi(str);
+        UART_TransmitString(UART_PORT, "\n\rTarget RPM: ");
+        UART_TransmitInt(UART_PORT, target_rpm, 3);
+        UART_TransmitString(UART_PORT, "\n\r");
+        n = 0;
+    } else {
+        UART_TransmitChar(UART_PORT, c);
+    }
+}
+
 /* -------------------------------------------------------------------------------------------------------------
  * Main Program Code
  *
@@ -83,14 +107,13 @@ volatile uint32_t encoder_count = 0;
 
 int main(void) {
     target_rpm = 0;
-    int up = 1;
     debouncer = 0;                          // Initialize global variables
     HAL_Init();                             // Initialize HAL internals
     LED_init();                             // Initialize LED's
     button_init();                          // Initialize button
     motor_init();                           // Initialize motor code
 
-    uint8_t uart = 3;
+    uint8_t uart = UART_PORT;
     uint8_t uart_gpio = 2;
     uint8_t uart_tx = 4; // PC4
     uint8_t uart_rx = 5; // PC5
@@ -100,6 +123,7 @@ int main(void) {
     UART_SetBaudRate(uart, baud);
     UART_Enable(uart, interrupt_priority);
     UART_TransmitString(uart, "UART Works!\n\r");
+    uart_rx_cb = &uart_receive;
 
     /*RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
     GPIO_InitTypeDef initStr = {GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6,
@@ -115,17 +139,7 @@ int main(void) {
     while (1) {
         GPIOC->ODR ^= GPIO_ODR_9;           // Toggle green LED (heartbeat)
         encoder_count = TIM2->CNT;
-        //HAL_Delay(128);                      // Delay 1/8 second
-        HAL_Delay(128);                      // Delay 1/8 second
-        if (up)
-            target_rpm++;
-        else
-            target_rpm--;
-
-        if (target_rpm == 0)
-            up = 1;
-        else if (target_rpm == 80)
-            up = 0; 
+        HAL_Delay(128);               // Delay 1/8 second
     }
 }
 
