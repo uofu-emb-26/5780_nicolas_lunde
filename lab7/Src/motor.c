@@ -201,8 +201,8 @@ void ADC_init(void) {
  */
 void PI_update(void) {
     __disable_irq();
-    Kp = 5;
-    Ki = 5;
+    Kp = 3;
+    Ki = 3;
     /// TODO: calculate error signal and write to "error" variable
 
     /* Hint: Remember that your calculated motor speed may not be directly in RPM!
