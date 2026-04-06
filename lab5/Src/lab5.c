@@ -22,7 +22,7 @@ int main(void)
     uint8_t tx_pin = 4; // PC4
     uint8_t rx_pin = 5; // PC5
     uint32_t baud = 115200;
-    uint8_t interrupt_priority;
+    uint8_t interrupt_priority = 1;
     UART_Init(uart_port, uart_gpio, tx_pin, rx_pin);
     UART_SetBaudRate(uart_port, baud);
     UART_Enable(uart_port, interrupt_priority);

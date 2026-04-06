@@ -44,7 +44,12 @@ void PendSV_Handler(void)
   */
 void SysTick_Handler(void)
 {
-  HAL_IncTick();
+    /* USER CODE BEGIN SysTick_IRQn 0 */
+    HAL_IncTick();
+    //Lab7_SysTick_Callback();
+    /* USER CODE END SysTick_IRQn 0 */
+    /* USER CODE BEGIN SysTick_IRQn 1 */
+    /* USER CODE END SysTick_IRQn 1 */
 }
 
 /******************************************************************************/
